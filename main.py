@@ -73,7 +73,7 @@ mlab.points3d(0, 0, 0, scale_factor=2, color=(0, 0, 0))
 geodesic_plot = mlab.plot3d([x_sol[0]], [y_sol[0]], [z_sol[0]], color=(0, 0, 1), tube_radius=0.1)
 
 # Animation function
-@mlab.animate(delay=100)  # Adjust the delay as needed
+@mlab.animate(delay=50)  # Adjust the delay as needed
 def anim():
     for i in range(1, len(x_sol)):
         geodesic_plot.mlab_source.reset(x=x_sol[:i+1], y=y_sol[:i+1], z=z_sol[:i+1])
