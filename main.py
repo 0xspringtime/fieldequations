@@ -2,7 +2,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from mpl_toolkits.mplot3d import Axes3D
 
 def christoffel_symbols_schwarzschild(r, M):
     Rs = 2 * M  # Schwarzschild radius
@@ -51,6 +51,17 @@ x_sol = r_sol * np.sin(θ_sol) * np.cos(φ_sol)
 y_sol = r_sol * np.sin(θ_sol) * np.sin(φ_sol)
 z_sol = r_sol * np.cos(θ_sol)
 
+# Define a function to represent the curvature of spacetime more accurately
+def curvature_z(x, y, M):
+    Rs = 2 * M
+    r = np.sqrt(x**2 + y**2)
+    return -Rs / np.sqrt(r + 1e-10)  # Improved curvature function
+
+# Create a mesh grid for the spacetime curvature
+grid_size = 50
+x_grid, y_grid = np.meshgrid(np.linspace(-20, 20, grid_size), np.linspace(-20, 20, grid_size))
+z_grid = curvature_z(x_grid, y_grid, M)
+
 # Set up the figure and axis
 fig = plt.figure(figsize=(10, 7))
 ax = fig.add_subplot(111, projection='3d')
@@ -60,10 +71,13 @@ ax.set_zlim([-20, 20])
 ax.set_xlabel('x')
 ax.set_ylabel('y')
 ax.set_zlabel('z')
-ax.set_title('Geodesic Path in Schwarzschild Spacetime')
+ax.set_title('Geodesic Path in Curved Spacetime')
 
-# Initialize the plot line
-line, = ax.plot([], [], [], label='Geodesic Path')
+# Plot the curvature grid
+ax.plot_surface(x_grid, y_grid, z_grid, color='gray', alpha=0.5, rstride=1, cstride=1, edgecolor='none')
+
+# Initialize the plot line for the geodesic path
+line, = ax.plot([], [], [], label='Geodesic Path', color='blue')
 
 # Add a sphere to represent the massive object
 u = np.linspace(0, 2 * np.pi, 100)
@@ -72,11 +86,6 @@ x_sphere = 2 * np.outer(np.cos(u), np.sin(v))  # Radius of the sphere
 y_sphere = 2 * np.outer(np.sin(u), np.sin(v))
 z_sphere = 2 * np.outer(np.ones(np.size(u)), np.cos(v))
 ax.plot_surface(x_sphere, y_sphere, z_sphere, color='black', alpha=0.5)
-
-# Add a grid to represent spacetime curvature
-grid_size = 20
-x_grid, y_grid = np.meshgrid(np.linspace(-20, 20, grid_size), np.linspace(-20, 20, grid_size))
-z_grid = np.zeros_like(x_grid)
 
 # Animation function
 def update(num, x_sol, y_sol, z_sol, line):
