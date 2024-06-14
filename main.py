@@ -1,8 +1,6 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from mpl_toolkits.mplot3d import Axes3D
+from mayavi import mlab
 
 def christoffel_symbols_schwarzschild(r, M):
     Rs = 2 * M  # Schwarzschild radius
@@ -62,41 +60,26 @@ grid_size = 50
 x_grid, y_grid = np.meshgrid(np.linspace(-20, 20, grid_size), np.linspace(-20, 20, grid_size))
 z_grid = curvature_z(x_grid, y_grid, M)
 
-# Set up the figure and axis
-fig = plt.figure(figsize=(10, 7))
-ax = fig.add_subplot(111, projection='3d')
-ax.set_xlim([-20, 20])
-ax.set_ylim([-20, 20])
-ax.set_zlim([-20, 20])
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_zlabel('z')
-ax.set_title('Geodesic Path in Curved Spacetime')
+# Set up the figure and axis using Mayavi
+mlab.figure(size=(800, 600), bgcolor=(1, 1, 1))
 
-# Plot the curvature grid
-ax.plot_surface(x_grid, y_grid, z_grid, color='gray', alpha=0.5, rstride=1, cstride=1, edgecolor='none')
+# Plot the curvature grid using Mayavi
+mlab.mesh(x_grid, y_grid, z_grid, color=(0.5, 0.5, 0.5), opacity=0.5)
 
-# Initialize the plot line for the geodesic path
-line, = ax.plot([], [], [], label='Geodesic Path', color='blue')
+# Plot the massive object (black hole) as a sphere
+mlab.points3d(0, 0, 0, scale_factor=2, color=(0, 0, 0))
 
-# Add a sphere to represent the massive object
-u = np.linspace(0, 2 * np.pi, 100)
-v = np.linspace(0, np.pi, 100)
-x_sphere = 2 * np.outer(np.cos(u), np.sin(v))  # Radius of the sphere
-y_sphere = 2 * np.outer(np.sin(u), np.sin(v))
-z_sphere = 2 * np.outer(np.ones(np.size(u)), np.cos(v))
-ax.plot_surface(x_sphere, y_sphere, z_sphere, color='black', alpha=0.5)
+# Initialize the plot for the geodesic path
+geodesic_plot = mlab.plot3d([x_sol[0]], [y_sol[0]], [z_sol[0]], color=(0, 0, 1), tube_radius=0.1)
 
 # Animation function
-def update(num, x_sol, y_sol, z_sol, line):
-    line.set_data(x_sol[:num], y_sol[:num])
-    line.set_3d_properties(z_sol[:num])
-    return line,
+@mlab.animate(delay=100)  # Adjust the delay as needed
+def anim():
+    for i in range(1, len(x_sol)):
+        geodesic_plot.mlab_source.reset(x=x_sol[:i+1], y=y_sol[:i+1], z=z_sol[:i+1])
+        yield
 
-# Create the animation
-ani = FuncAnimation(fig, update, frames=len(t_sol), fargs=(x_sol, y_sol, z_sol, line), interval=10, blit=True)
-
-# Show the plot with animation
-plt.legend()
-plt.show()
+# Run the animation
+anim()
+mlab.show()
 
